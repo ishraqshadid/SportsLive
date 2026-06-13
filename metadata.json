@@ -1,0 +1,6 @@
+{
+  "name": "LiveStream Sports",
+  "description": "A high-performance, minimalist, black-themed sports streaming interface.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
