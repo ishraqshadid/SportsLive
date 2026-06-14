@@ -58,6 +58,43 @@ const HlsVideoPlayer = ({ url }: { url: string }) => {
   );
 };
 
+// Monetag Ads Manager Logic (8s delay + 20 min cooldown)
+const MonetagAdManager = () => {
+  useEffect(() => {
+    // 1. In-Page Push (Runs immediately, manages its own frequency via Monetag)
+    const pushScript = document.createElement('script');
+    pushScript.src = 'https://nap5k.com/tag.min.js';
+    pushScript.dataset.zone = '11146620';
+    pushScript.async = true;
+    document.body.appendChild(pushScript);
+
+    // 2. Vignette Banner (8 seconds delay + 20 mins strict cooldown per user)
+    let timer: ReturnType<typeof setTimeout>;
+    const lastAdTime = localStorage.getItem('lastVignetteTime');
+    const now = new Date().getTime();
+    const cooldownTime = 20 * 60 * 1000; // 20 minutes in milliseconds
+
+    if (!lastAdTime || (now - parseInt(lastAdTime)) > cooldownTime) {
+      timer = setTimeout(() => {
+        const vignetteScript = document.createElement('script');
+        vignetteScript.src = 'https://n6wxm.com/vignette.min.js';
+        vignetteScript.dataset.zone = '11146673';
+        vignetteScript.async = true;
+        document.body.appendChild(vignetteScript);
+        
+        // Save the current time so it doesn't show again for 20 mins
+        localStorage.setItem('lastVignetteTime', now.toString());
+      }, 8000); // 8000 ms = 8 seconds delay
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  return null;
+};
+
 const channels = [
   { id: 1, name: 'PTV Sports', logo: 'https://upload.wikimedia.org/wikipedia/en/e/e4/PTV_Sports.png', isLive: true, streamUrl: 'http://198.195.239.50:8095/ptv/index.m3u8' },
   { id: 2, name: 'beIN Sports Xtra', logo: 'https://static.wikia.nocookie.net/logopedia/images/b/b5/XTRA_2.png/revision/latest/scale-to-width-down/250?cb=20201108180658', isLive: true, streamUrl: 'https://amg01334-amg01334c2-freelivesports-emea-6791.playouts.now.amagi.tv/playlist/amg01334-beinxtra-beinxtrausapp-freelivesportsemea/playlist.m3u8' },
@@ -218,6 +255,9 @@ export default function App() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-black text-zinc-300 font-sans lg:flex-row">
       
+      {/* Call the Monetag Ads Manager to handle Background Script Logic */}
+      <MonetagAdManager />
+      
       {/* MOBILE CONTAINER */}
       <div className="flex-shrink-0 z-50 shadow-md lg:hidden flex flex-col border-b border-zinc-900 bg-black">
         <div className="bg-[#111] border-b border-zinc-800 px-4 py-3 flex flex-col items-center justify-center gap-2">
@@ -261,6 +301,11 @@ export default function App() {
            </div>
         </div>
         
+        {/* DESKTOP AD BANNER PLACEHOLDER (Right above the scoreboard) */}
+        <div className="w-full flex items-center justify-center bg-zinc-900/40 py-2 border-b border-zinc-800">
+           <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Advertisement Space</span>
+        </div>
+        
         {/* HERO SCOREBOARD */}
         <div className="flex-1 overflow-y-auto bg-black flex flex-col items-center justify-center p-6 lg:p-10 custom-scrollbar">
           <div className="w-full max-w-3xl flex flex-col items-center justify-center">
@@ -298,6 +343,12 @@ export default function App() {
 
       {/* RIGHT SIDEBAR */}
       <div className="flex-1 overflow-y-auto pb-4 lg:pb-0 lg:w-[30%] bg-[#050505] flex flex-col z-10 custom-scrollbar relative">
+         
+         {/* MOBILE AD BANNER PLACEHOLDER (Below video, right above channel list. lg:hidden makes sure it only shows on mobile) */}
+         <div className="w-full flex items-center justify-center bg-zinc-900/40 py-2 border-b border-zinc-800 lg:hidden">
+            <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">Advertisement Space</span>
+         </div>
+
          <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-[#050505] sticky top-0 z-20">
              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white">Live Channels</h2>
              <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">{channels.length} Available</span>
