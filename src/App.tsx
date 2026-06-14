@@ -52,7 +52,7 @@ const HlsVideoPlayer = ({ url }: { url: string }) => {
       controls 
       autoPlay 
       muted 
-      style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', top: 0, left: 0 }} 
+      style={{ width: '100%', height: '100%', objectFit: 'contain', position: 'absolute', top: 0, left: 0 }} 
     />
   );
 };
