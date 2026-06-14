@@ -6,7 +6,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
+// Passive fetch handler to satisfy the PWA install requirement 
+// without interfering with video streams or API calls.
 self.addEventListener('fetch', (event) => {
-  // Required minimal fetch handler for PWA installation
-  event.respondWith(fetch(event.request).catch(() => new Response('Offline')));
+  return;
 });
