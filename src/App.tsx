@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Hls from 'hls.js';
+
 // Custom Video Player with HTTP to HTTPS proxy interceptor
 const HlsVideoPlayer = ({ url }: { url: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -74,7 +75,10 @@ export default function App() {
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [heroMatch, setHeroMatch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [localTick, setLocalTick] = useState(0);
+  
+  // Real-time synchronization states
+  const [nowTick, setNowTick] = useState(Date.now());
+  const matchStartTimeRef = useRef<number | null>(null);
 
   // Dynamic Date Range Generator (YYYYMMDD format)
   const getDynamicDates = () => {
@@ -147,8 +151,19 @@ export default function App() {
         setUpcomingMatches(upcoming.slice(0, 4));
 
         // Logic: Live Match > Next Upcoming Match > Last Finished Match
-        setHeroMatch(live[0] || upcoming[0] || finished[0] || null);
-        setLocalTick(0);
+        const hero = live[0] || upcoming[0] || finished[0] || null;
+        setHeroMatch(hero);
+
+        // Calculate theoretical start time for perfect real-time sync
+        if (hero && hero.state === 'in' && hero.clockSeconds) {
+          const serverStartTime = Date.now() - (hero.clockSeconds * 1000);
+          if (!matchStartTimeRef.current || Math.abs(matchStartTimeRef.current - serverStartTime) > 5000) {
+            matchStartTimeRef.current = serverStartTime;
+          }
+        } else {
+          matchStartTimeRef.current = null;
+        }
+
         setIsLoading(false);
 
       } catch (err) {
@@ -160,9 +175,9 @@ export default function App() {
     fetchLiveGames();
     const interval = setInterval(fetchLiveGames, 30000); // 30 seconds auto-refresh
     
-    // Add local tick interval
+    // Real tick interval
     const tickInterval = setInterval(() => {
-      setLocalTick(prev => prev + 1);
+      setNowTick(Date.now());
     }, 1000);
 
     return () => {
@@ -171,12 +186,17 @@ export default function App() {
     };
   }, []);
 
-  const formatLiveClock = (match: any, tickAmount: number) => {
+  const formatLiveClock = (match: any) => {
     if (!match) return '0:00';
     if (match.detail === 'HT' || match.detail === 'Half-Time') return 'HT';
-    if (typeof match.clockSeconds !== 'number' || match.clockSeconds === 0) return match.clock || '0:00';
     
-    let baseSecs = match.clockSeconds + tickAmount;
+    let baseSecs = match.clockSeconds || 0;
+
+    // Apply real-time logic
+    if (match.state === 'in' && matchStartTimeRef.current) {
+      baseSecs = Math.floor((nowTick - matchStartTimeRef.current) / 1000);
+    }
+    
     const mins = Math.floor(baseSecs / 60);
     const secs = Math.floor(baseSecs % 60);
     let clockStr = `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -266,7 +286,7 @@ export default function App() {
               {isHeroLive ? <><span className="w-1.5 h-1.5 rounded-full bg-[#00ff00] animate-pulse"></span> <span className="text-[#00ff00]">LIVE</span></> : 'FIFA 2026'}
             </div>
             <div className="text-[10px] font-mono text-[#00ff00] bg-[#00ff00]/10 px-2 py-0.5 rounded">
-              {isHeroLive ? formatLiveClock(heroMatch, localTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
+              {isHeroLive ? formatLiveClock(heroMatch) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
             </div>
           </div>
           <div className="font-black text-[13px] tracking-wide text-white flex items-center justify-center text-center w-full overflow-hidden">
@@ -321,7 +341,7 @@ export default function App() {
                     {isLoading ? '...' : (isHeroLive ? `${heroMatch?.homeScore} — ${heroMatch?.awayScore}` : 'VS')}
                   </div>
                   <div className="text-[11px] md:text-xs font-mono text-[#00ff00] bg-[#00ff00]/10 px-4 py-1.5 rounded-full inline-block whitespace-nowrap">
-                    {isLoading ? 'LOADING' : (isHeroLive ? formatLiveClock(heroMatch, localTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
+                    {isLoading ? 'LOADING' : (isHeroLive ? formatLiveClock(heroMatch) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
                   </div>
                 </div>
 
