@@ -58,22 +58,23 @@ const HlsVideoPlayer = ({ url }: { url: string }) => {
 };
 
 const channels = [
+  { id: 5, name: 'beIN Sports 1', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQV-7LwV1rHhmIG8eIyApJJ4WhqLR_Rrg2kxr0wQGZhWQ&s=10', isLive: true, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8' },
+  { id: 7, name: 'DAZN', logo: 'data:image/png;base64,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', isLive: true, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/94/index.m3u8' },
+  { id: 8, name: 'CCTV 5', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy_WI9V-BhHRyuAJ4MuygemyeZZ2J87sG6xfFZUWajFQ&s=10', isLive: true, streamUrl: 'https://live12.xiazhix1.top/live/85042987.m3u8' },
   { id: 1, name: 'PTV Sports', logo: 'https://upload.wikimedia.org/wikipedia/en/e/e4/PTV_Sports.png', isLive: true, streamUrl: 'http://198.195.239.50:8095/ptv/index.m3u8' },
   { id: 2, name: 'beIN Sports Xtra', logo: 'https://static.wikia.nocookie.net/logopedia/images/b/b5/XTRA_2.png/revision/latest/scale-to-width-down/250?cb=20201108180658', isLive: true, streamUrl: 'https://amg01334-amg01334c2-freelivesports-emea-6791.playouts.now.amagi.tv/playlist/amg01334-beinxtra-beinxtrausapp-freelivesportsemea/playlist.m3u8' },
   { id: 3, name: 'Win Sports', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/58/Win_Sports_nuevo_logo.svg/3840px-Win_Sports_nuevo_logo.svg.png', isLive: false, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/32/index.m3u8' },
   { id: 4, name: 'TNT Sports Premium', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS72dyeDbjigwXfnfixEtbAWdPDB18y283059B11zi2zw&s=10', isLive: false, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/30/index.m3u8' },
-  { id: 5, name: 'beIN Sports 1', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQV-7LwV1rHhmIG8eIyApJJ4WhqLR_Rrg2kxr0wQGZhWQ&s=10', isLive: true, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/23/index.m3u8' },
   { id: 6, name: 'FIFA+', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvVpgdfec1KvDNJ1YGcCSM9S8y4Yo0xTqcu4ls-47Ptw&s=10', isLive: true, streamUrl: 'https://d63fabad.wurl.com/manifest/f36d25e7e52f1ba8d7e56eb859c636563214f541/UmFrdXRlblRWLWVzX0ZJRkFQbHVzU3BhbmlzaF9ITFM/1e7d5a77-89f1-49e8-b5cf-bb6e45be5a09/1.m3u8' },
-  { id: 7, name: 'DAZN', logo: 'data:image/png;base64,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', isLive: true, streamUrl: 'https://1nyaler.streamhostingcdn.top/stream/94/index.m3u8' },
-  { id: 8, name: 'CCTV 5', logo: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSy_WI9V-BhHRyuAJ4MuygemyeZZ2J87sG6xfFZUWajFQ&s=10', isLive: true, streamUrl: 'https://live12.xiazhix1.top/live/85042987.m3u8' }
 ];
 
 export default function App() {
-  const [activeChannel, setActiveChannel] = useState(2); 
+  const [activeChannel, setActiveChannel] = useState(5); 
   const [latestMatches, setLatestMatches] = useState<any[]>([]);
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [heroMatch, setHeroMatch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [localTick, setLocalTick] = useState(0);
 
   // Dynamic Date Range Generator (YYYYMMDD format)
   const getDynamicDates = () => {
@@ -97,6 +98,17 @@ export default function App() {
     const home = comp?.competitors?.find((c: any) => c.homeAway === 'home');
     const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
     
+    let clockStr = event.status?.displayClock || '0:00';
+    if (event.status?.clock && event.status?.type?.state === 'in') {
+      const mins = Math.floor(event.status.clock / 60);
+      const secs = Math.floor(event.status.clock % 60);
+      clockStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+      if (typeof event.status.displayClock === 'string' && event.status.displayClock.includes('+')) {
+        const stoppage = event.status.displayClock.split('+')[1];
+        if (stoppage) clockStr += ` +${stoppage}`;
+      }
+    }
+
     return {
       id: event.id,
       homeTeam: home?.team?.name || home?.team?.shortDisplayName || 'Home',
@@ -105,7 +117,10 @@ export default function App() {
       awayScore: away?.score || '0',
       date: event.date,
       state: event.status?.type?.state, // 'pre', 'in', 'post'
-      clock: event.status?.displayClock || '0:00'
+      detail: event.status?.type?.detail,
+      clock: clockStr,
+      clockSeconds: event.status?.clock || 0,
+      displayClock: event.status?.displayClock || ''
     };
   };
 
@@ -133,6 +148,7 @@ export default function App() {
 
         // Logic: Live Match > Next Upcoming Match > Last Finished Match
         setHeroMatch(live[0] || upcoming[0] || finished[0] || null);
+        setLocalTick(0);
         setIsLoading(false);
 
       } catch (err) {
@@ -144,8 +160,33 @@ export default function App() {
     fetchLiveGames();
     const interval = setInterval(fetchLiveGames, 30000); // 30 seconds auto-refresh
     
-    return () => clearInterval(interval);
+    // Add local tick interval
+    const tickInterval = setInterval(() => {
+      setLocalTick(prev => prev + 1);
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+      clearInterval(tickInterval);
+    };
   }, []);
+
+  const formatLiveClock = (match: any, tickAmount: number) => {
+    if (!match) return '0:00';
+    if (match.detail === 'HT' || match.detail === 'Half-Time') return 'HT';
+    if (typeof match.clockSeconds !== 'number' || match.clockSeconds === 0) return match.clock || '0:00';
+    
+    let baseSecs = match.clockSeconds + tickAmount;
+    const mins = Math.floor(baseSecs / 60);
+    const secs = Math.floor(baseSecs % 60);
+    let clockStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+    
+    if (typeof match.displayClock === 'string' && match.displayClock.includes('+')) {
+      const stoppage = match.displayClock.split('+')[1]?.replace(/'/g, '');
+      if (stoppage) clockStr += ` +${stoppage}`;
+    }
+    return clockStr;
+  };
 
   const formatTime12Hr = (dateString: string) => {
     if (!dateString) return 'TBD';
@@ -225,7 +266,7 @@ export default function App() {
               {isHeroLive ? <><span className="w-1.5 h-1.5 rounded-full bg-[#00ff00] animate-pulse"></span> <span className="text-[#00ff00]">LIVE</span></> : 'FIFA 2026'}
             </div>
             <div className="text-[10px] font-mono text-[#00ff00] bg-[#00ff00]/10 px-2 py-0.5 rounded">
-              {isHeroLive ? heroMatch?.clock : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
+              {isHeroLive ? formatLiveClock(heroMatch, localTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
             </div>
           </div>
           <div className="font-black text-[13px] tracking-wide text-white flex items-center justify-center text-center w-full overflow-hidden">
@@ -280,7 +321,7 @@ export default function App() {
                     {isLoading ? '...' : (isHeroLive ? `${heroMatch?.homeScore} — ${heroMatch?.awayScore}` : 'VS')}
                   </div>
                   <div className="text-[11px] md:text-xs font-mono text-[#00ff00] bg-[#00ff00]/10 px-4 py-1.5 rounded-full inline-block whitespace-nowrap">
-                    {isLoading ? 'LOADING' : (isHeroLive ? heroMatch?.clock : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
+                    {isLoading ? 'LOADING' : (isHeroLive ? formatLiveClock(heroMatch, localTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
                   </div>
                 </div>
 
