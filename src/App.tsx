@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Download } from 'lucide-react';
 import Hls from 'hls.js';
 
 // Custom Video Player with HTTP to HTTPS proxy interceptor
@@ -75,6 +76,38 @@ export default function App() {
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [heroMatch, setHeroMatch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+      }
+      setDeferredPrompt(null);
+    } else {
+      alert("To install this app:\n1. Open the app in a new tab (using the button in the top right corner).\n2. Use your browser's 'Add to Home Screen' or 'Install' option.");
+    }
+  };
 
   // Dynamic Date Range Generator (YYYYMMDD format)
   const getDynamicDates = () => {
@@ -216,7 +249,8 @@ export default function App() {
   );
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-black text-zinc-300 font-sans lg:flex-row">
+    <>
+      <div className="h-screen flex flex-col overflow-hidden bg-black text-zinc-300 font-sans lg:flex-row">
       
       {/* MOBILE CONTAINER */}
       <div className="flex-shrink-0 z-50 shadow-md lg:hidden flex flex-col border-b border-zinc-900 bg-black">
@@ -300,7 +334,16 @@ export default function App() {
       <div className="flex-1 overflow-y-auto pb-4 lg:pb-0 lg:w-[30%] bg-[#050505] flex flex-col z-10 custom-scrollbar relative">
          <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-[#050505] sticky top-0 z-20">
              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-white">Live Channels</h2>
-             <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded text-zinc-400">{channels.length} Available</span>
+             {!isInstalled && (
+               <button
+                 onClick={handleInstallClick}
+                 className="flex items-center gap-1.5 px-3 py-1 rounded bg-[#111] border border-zinc-800 hover:bg-[#1a1a1a] hover:border-zinc-700 text-zinc-300 transition-colors text-[10px] uppercase font-bold tracking-widest mx-2"
+               >
+                 <Download size={12} strokeWidth={2} />
+                 <span>Install</span>
+               </button>
+             )}
+             <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded flex-shrink-0 text-zinc-400">{channels.length} Available</span>
          </div>
          
          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 p-4">
@@ -344,5 +387,6 @@ export default function App() {
          </div>
       </div>
     </div>
+    </>
   );
 }
