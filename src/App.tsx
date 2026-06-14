@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Hls from 'hls.js';
+import { Download, X } from 'lucide-react';
 
 // Custom Video Player with HTTP to HTTPS proxy interceptor
 const HlsVideoPlayer = ({ url }: { url: string }) => {
@@ -75,6 +76,58 @@ export default function App() {
   const [upcomingMatches, setUpcomingMatches] = useState<any[]>([]);
   const [heroMatch, setHeroMatch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallPopup, setShowInstallPopup] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      if (!sessionStorage.getItem('installPopupDismissed')) {
+        setShowInstallPopup(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Show manual popup for discovery on iOS/previews after delay
+    const timer = setTimeout(() => {
+      if (!isInstalled && !sessionStorage.getItem('installPopupDismissed')) {
+        setShowInstallPopup(true);
+      }
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, [isInstalled]);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setShowInstallPopup(false);
+      }
+      setDeferredPrompt(null);
+    } else {
+      alert("To install the app:\n1. Open this website in your standard browser (Chrome/Safari outside this preview).\n2. Tap the browser menu ('Share' on iOS) and select 'Add to Home Screen' or 'Install'.");
+      setShowInstallPopup(false);
+    }
+  };
+
+  const handleDismissInstall = () => {
+    setShowInstallPopup(false);
+    sessionStorage.setItem('installPopupDismissed', 'true');
+  };
 
   // Dynamic Date Range Generator (YYYYMMDD format)
   const getDynamicDates = () => {
@@ -345,6 +398,34 @@ export default function App() {
          </div>
       </div>
     </div>
+    {!isInstalled && showInstallPopup && (
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[999] bg-[#111] border border-zinc-800 p-4 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] flex items-center gap-4 w-[90%] max-w-sm transition-all duration-500 ease-out animate-in fade-in slide-in-from-bottom-8 relative">
+        <button 
+          onClick={handleDismissInstall} 
+          className="absolute -top-3 -right-3 bg-zinc-900 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-800 p-1.5 rounded-full shadow-lg transition-colors z-[1000]"
+          aria-label="Close install prompt"
+        >
+          <X size={14} strokeWidth={2.5} />
+        </button>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-10 h-10 bg-[#1a1a1a] rounded flex items-center justify-center border border-zinc-800 flex-shrink-0 relative overflow-hidden">
+             <Download size={18} className="text-[#00ff00]" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-white text-sm font-bold tracking-wide">Install App</span>
+            <span className="text-zinc-500 text-[10px] leading-tight mt-0.5">Add to home screen for the best experience</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button 
+            onClick={handleInstallClick}
+            className="bg-[#00ff00] hover:bg-[#00cc00] text-black px-4 py-2 flex items-center justify-center rounded font-black text-[10px] uppercase tracking-widest transition-colors shadow-lg shadow-[#00ff00]/10"
+          >
+            Install
+          </button>
+        </div>
+      </div>
+    )}
     </>
   );
 }
