@@ -76,9 +76,32 @@ export default function App() {
   const [heroMatch, setHeroMatch] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Real-time synchronization states
+  // Real-time synchronization state
   const [nowTick, setNowTick] = useState(Date.now());
-  const matchStartTimeRef = useRef<number | null>(null);
+  
+  // startTimesRef stores matchId -> theoreticalStartTime (in milliseconds)
+  const startTimesRef = useRef<Record<string, number>>({});
+
+  // Initialize startTimesRef from localStorage on first render to prevent resetting on refresh
+  if (Object.keys(startTimesRef.current).length === 0) {
+    try {
+      const stored = localStorage.getItem('match_start_times');
+      if (stored) {
+        startTimesRef.current = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Error reading start times:', e);
+    }
+  }
+
+  const updateStartTimeInStorage = (matchId: string, time: number) => {
+    startTimesRef.current[matchId] = time;
+    try {
+      localStorage.setItem('match_start_times', JSON.stringify(startTimesRef.current));
+    } catch (e) {
+      console.error('Error writing start times:', e);
+    }
+  };
 
   // Dynamic Date Range Generator (YYYYMMDD format)
   const getDynamicDates = () => {
@@ -103,13 +126,41 @@ export default function App() {
     const away = comp?.competitors?.find((c: any) => c.homeAway === 'away');
     
     let clockStr = event.status?.displayClock || '0:00';
-    if (event.status?.clock && event.status?.type?.state === 'in') {
-      const mins = Math.floor(event.status.clock / 60);
-      const secs = Math.floor(event.status.clock % 60);
-      clockStr = `${mins}:${secs.toString().padStart(2, '0')}`;
-      if (typeof event.status.displayClock === 'string' && event.status.displayClock.includes('+')) {
-        const stoppage = event.status.displayClock.split('+')[1];
-        if (stoppage) clockStr += ` +${stoppage}`;
+    let apiSecs = event.status?.clock || 0;
+    const displayClock = event.status?.displayClock || '';
+
+    if (apiSecs === 0 && displayClock) {
+      if (displayClock.includes(':')) {
+        const parts = displayClock.split(':');
+        apiSecs = parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      } else {
+        const parsed = displayClock.match(/(\d+)/);
+        if (parsed) apiSecs = parseInt(parsed[1], 10) * 60;
+      }
+    }
+
+    const state = event.status?.type?.state; // 'pre', 'in', 'post'
+
+    if (state === 'in') {
+      const computedStartTime = Date.now() - (apiSecs * 1000);
+      const cachedStartTime = startTimesRef.current[event.id];
+
+      // If we have a cached start time within 2 minutes of the computed one, 
+      // preserve the exact start time to guarantee smooth second-by-second scrolling without layout jumps or clock resets on refresh.
+      if (cachedStartTime) {
+        if (Math.abs(cachedStartTime - computedStartTime) > 120000) {
+          updateStartTimeInStorage(event.id, computedStartTime);
+        }
+      } else {
+        updateStartTimeInStorage(event.id, computedStartTime);
+      }
+    } else {
+      // Clean up cached timers for finished games
+      if (startTimesRef.current[event.id]) {
+        delete startTimesRef.current[event.id];
+        try {
+          localStorage.setItem('match_start_times', JSON.stringify(startTimesRef.current));
+        } catch (e) {}
       }
     }
 
@@ -120,11 +171,10 @@ export default function App() {
       homeScore: home?.score || '0',
       awayScore: away?.score || '0',
       date: event.date,
-      state: event.status?.type?.state, // 'pre', 'in', 'post'
+      state: state,
       detail: event.status?.type?.detail,
-      clock: clockStr,
-      clockSeconds: event.status?.clock || 0,
-      displayClock: event.status?.displayClock || ''
+      clockSeconds: apiSecs,
+      displayClock: displayClock
     };
   };
 
@@ -154,16 +204,6 @@ export default function App() {
         const hero = live[0] || upcoming[0] || finished[0] || null;
         setHeroMatch(hero);
 
-        // Calculate theoretical start time for perfect real-time sync
-        if (hero && hero.state === 'in' && hero.clockSeconds) {
-          const serverStartTime = Date.now() - (hero.clockSeconds * 1000);
-          if (!matchStartTimeRef.current || Math.abs(matchStartTimeRef.current - serverStartTime) > 5000) {
-            matchStartTimeRef.current = serverStartTime;
-          }
-        } else {
-          matchStartTimeRef.current = null;
-        }
-
         setIsLoading(false);
 
       } catch (err) {
@@ -175,7 +215,7 @@ export default function App() {
     fetchLiveGames();
     const interval = setInterval(fetchLiveGames, 30000); // 30 seconds auto-refresh
     
-    // Real tick interval
+    // Seamless real-time second-by-second tick interval using absolute Date.now() difference
     const tickInterval = setInterval(() => {
       setNowTick(Date.now());
     }, 1000);
@@ -186,15 +226,18 @@ export default function App() {
     };
   }, []);
 
-  const formatLiveClock = (match: any) => {
+  const formatLiveClock = (match: any, nowMs: number) => {
     if (!match) return '0:00';
     if (match.detail === 'HT' || match.detail === 'Half-Time') return 'HT';
-    
+    if (match.detail === 'FT' || match.detail === 'Full-Time') return 'FT';
+
+    const cachedStartTime = startTimesRef.current[match.id];
     let baseSecs = match.clockSeconds || 0;
 
-    // Apply real-time logic
-    if (match.state === 'in' && matchStartTimeRef.current) {
-      baseSecs = Math.floor((nowTick - matchStartTimeRef.current) / 1000);
+    // Resolve live elapsed seconds securely relative to cachedStartTime
+    if (match.state === 'in' && cachedStartTime) {
+      const elapsedMs = nowMs - cachedStartTime;
+      baseSecs = Math.max(0, Math.floor(elapsedMs / 1000));
     }
     
     const mins = Math.floor(baseSecs / 60);
@@ -286,7 +329,7 @@ export default function App() {
               {isHeroLive ? <><span className="w-1.5 h-1.5 rounded-full bg-[#00ff00] animate-pulse"></span> <span className="text-[#00ff00]">LIVE</span></> : 'FIFA 2026'}
             </div>
             <div className="text-[10px] font-mono text-[#00ff00] bg-[#00ff00]/10 px-2 py-0.5 rounded">
-              {isHeroLive ? formatLiveClock(heroMatch) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
+              {isHeroLive ? formatLiveClock(heroMatch, nowTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'TBD')}
             </div>
           </div>
           <div className="font-black text-[13px] tracking-wide text-white flex items-center justify-center text-center w-full overflow-hidden">
@@ -341,7 +384,7 @@ export default function App() {
                     {isLoading ? '...' : (isHeroLive ? `${heroMatch?.homeScore} — ${heroMatch?.awayScore}` : 'VS')}
                   </div>
                   <div className="text-[11px] md:text-xs font-mono text-[#00ff00] bg-[#00ff00]/10 px-4 py-1.5 rounded-full inline-block whitespace-nowrap">
-                    {isLoading ? 'LOADING' : (isHeroLive ? formatLiveClock(heroMatch) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
+                    {isLoading ? 'LOADING' : (isHeroLive ? formatLiveClock(heroMatch, nowTick) : (heroMatch ? formatTime12Hr(heroMatch.date) : 'NO DATA'))}
                   </div>
                 </div>
 
