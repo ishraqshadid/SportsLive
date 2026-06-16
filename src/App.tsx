@@ -271,53 +271,6 @@ export default function App() {
   const isHeroLive = heroMatch?.state === 'in';
   const activeChannelData = channels.find(c => c.id === activeChannel);
 
-  const Tables = () => (
-    <>
-      <div className="flex flex-col flex-1">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Previous Matches</h3>
-        <div className="bg-[#111] border border-zinc-800 rounded overflow-hidden">
-          <div className="flex flex-col divide-y divide-zinc-800">
-            {latestMatches.length > 0 ? (
-              latestMatches.map((match, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 hover:bg-zinc-900/50 transition-colors">
-                  <div className="text-[11px] font-medium text-zinc-300 w-[35%] truncate">{match.homeTeam}</div>
-                  <div className="text-[11px] w-[30%] text-center text-white font-semibold">
-                    {match.homeScore} &mdash; {match.awayScore}
-                  </div>
-                  <div className="text-[11px] text-zinc-500 w-[35%] text-right truncate">{match.awayTeam}</div>
-                </div>
-              ))
-            ) : (
-              <div className="p-4 text-center text-[11px] text-zinc-600">No recent history available.</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col flex-1 mt-6">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Upcoming Matches</h3>
-        <div className="bg-[#111] border border-zinc-800 rounded overflow-hidden">
-          <div className="flex flex-col divide-y divide-zinc-800">
-            {upcomingMatches.length > 0 ? (
-              upcomingMatches.map((match, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 hover:bg-zinc-900/50 transition-colors">
-                  <div className="text-[11px] font-medium text-zinc-300 truncate">
-                    {match.homeTeam} <span className="text-zinc-600 mx-1">vs</span> {match.awayTeam}
-                  </div>
-                  <div className="text-[11px] text-[#00ff00] whitespace-nowrap text-right">
-                    {formatTime12Hr(match.date)}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="p-4 text-center text-[11px] text-zinc-600">No future matches found.</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-black text-zinc-300 font-sans lg:flex-row">
       
@@ -436,7 +389,48 @@ export default function App() {
 
          <div className="p-4">
             <div className="flex flex-col gap-6">
-              <Tables />
+              <div className="flex flex-col flex-1">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Previous Matches</h3>
+                <div className="bg-[#111] border border-zinc-800 rounded overflow-hidden">
+                  <div className="flex flex-col divide-y divide-zinc-800">
+                    {latestMatches.length > 0 ? (
+                      latestMatches.map((match, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 hover:bg-zinc-900/50 transition-colors">
+                          <div className="text-[11px] font-medium text-zinc-300 w-[35%] truncate">{match.homeTeam}</div>
+                          <div className="text-[11px] w-[30%] text-center text-white font-semibold">
+                            {match.homeScore} &mdash; {match.awayScore}
+                          </div>
+                          <div className="text-[11px] text-zinc-500 w-[35%] text-right truncate">{match.awayTeam}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-[11px] text-zinc-600">No recent history available.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col flex-1 mt-6">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-zinc-500 mb-2">Upcoming Matches</h3>
+                <div className="bg-[#111] border border-zinc-800 rounded overflow-hidden">
+                  <div className="flex flex-col divide-y divide-zinc-800">
+                    {upcomingMatches.length > 0 ? (
+                      upcomingMatches.map((match, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-2 hover:bg-zinc-900/50 transition-colors">
+                          <div className="text-[11px] font-medium text-zinc-300 truncate">
+                            {match.homeTeam} <span className="text-zinc-600 mx-1">vs</span> {match.awayTeam}
+                          </div>
+                          <div className="text-[11px] text-[#00ff00] whitespace-nowrap text-right">
+                            {formatTime12Hr(match.date)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-[11px] text-zinc-600">No future matches found.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
          </div>
          <div className="flex-1"></div>
