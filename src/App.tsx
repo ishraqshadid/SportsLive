@@ -270,6 +270,9 @@ export default function App() {
 
   const isHeroLive = heroMatch?.state === 'in';
   const activeChannelData = channels.find(c => c.id === activeChannel);
+  const proxiedStreamUrl = activeChannelData?.streamUrl 
+    ? `https://stream-proxy-0yig.onrender.com/proxy?url=${encodeURIComponent(activeChannelData.streamUrl)}`
+    : undefined;
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-black text-zinc-300 font-sans lg:flex-row">
@@ -293,8 +296,8 @@ export default function App() {
         </div>
         
         <div className="w-full aspect-video bg-[#0a0a0a] relative flex items-center justify-center overflow-hidden">
-          {activeChannelData?.streamUrl ? (
-            <HlsVideoPlayer url={activeChannelData.streamUrl} />
+          {proxiedStreamUrl ? (
+            <HlsVideoPlayer url={proxiedStreamUrl} />
           ) : (
             <div className="text-white text-sm">Stream Unavailable</div>
           )}
@@ -304,8 +307,8 @@ export default function App() {
       {/* DESKTOP CONTAINER */}
       <div className="hidden lg:flex lg:flex-col lg:w-[70%] lg:flex-shrink-0 lg:border-r lg:border-zinc-800 bg-black h-screen">
         <div className="w-full aspect-video 2xl:max-h-[55vh] object-cover bg-[#0a0a0a] border-b border-zinc-900 relative flex items-center justify-center overflow-hidden flex-shrink-0">
-           {activeChannelData?.streamUrl ? (
-             <HlsVideoPlayer url={activeChannelData.streamUrl} />
+           {proxiedStreamUrl ? (
+             <HlsVideoPlayer url={proxiedStreamUrl} />
            ) : (
              <div className="text-white text-sm">Stream Unavailable</div>
            )}
